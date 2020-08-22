@@ -63,7 +63,7 @@ end
 local function ApplyToGame(modsscreen)
 	local OldApply = modsscreen.Apply
 	modsscreen.Apply = function(self)
-		if GLOBAL.TheWorld == nil or GLOBAL.ThePlayer ~= nil then
+		if GLOBAL.TheWorld ~= nil and GLOBAL.ThePlayer ~= nil then
 			local isSecondary = GLOBAL.ThePlayer.player_classified._isSecondaryShard:value()
 			if GLOBAL.TheNet:GetServerIsClientHosted() and GLOBAL.TheNet:GetIsServerAdmin() and not GLOBAL.TheNet:GetIsClient() then --for non-dedicated non-caves server host.
 				print("APPLY: Requires local world reset.")
@@ -103,12 +103,28 @@ local function ApplyToGame(modsscreen)
 				--for clients/dedicated servers, and on master shard (overworld)
 				print("APPLY: Requires client restart from master shard.")
 				GLOBAL.TheSim:SetSetting("misc", "warn_mods_enabled", "false") --disables the mod warning screen when joining servers
-				GLOBAL.JoinServer(GLOBAL.TheNet:GetServerListing())
+				local listing = GLOBAL.TheNet:GetServerListing()
+				GLOBAL.TheNet:Disconnect(true)
+				GLOBAL.ThePlayer.isApplyingModChanges = true
+				GLOBAL.ThePlayer:DoPeriodicTask(4, function()
+					GLOBAL.JoinServer(listing)
+				end)
 			end
+		else
+			OldApply(self)
 		end
 	end
 end
 AddClassPostConstruct("screens/redux/modsscreen", ApplyToGame)
+
+function OverrideDuplicateConnectionDialog(popupdialog)
+	if popupdialog.dialog and popupdialog.dialog.title:GetString() == GLOBAL.STRINGS.UI.NETWORKDISCONNECT.TITLE.ID_ALREADY_CONNECTED and GLOBAL.ThePlayer and GLOBAL.ThePlayer.isApplyingModChanges then
+		popupdialog.dialog.title:SetString("Reconnecting to server...")
+		popupdialog.dialog.body:SetString("Don't panic. We've got everything under control.")
+		popupdialog.dialog.actions:Kill()
+	end
+end
+AddClassPostConstruct("screens/redux/popupdialog", OverrideDuplicateConnectionDialog)
 
 ---===================
 ---   Net Variables
