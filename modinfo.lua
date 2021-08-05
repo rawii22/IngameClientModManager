@@ -5,7 +5,7 @@ description = "Access your client mods from in-game. You can enable, disable, an
 .."Also, don't click \"cancel\" when it's loading unless you want to get caught in an inescapable infinite plane of reality...\n"
 .."Also, the mod does not work in the caves. We'll see if we can change that. "
 author = "rawii22 & lord_of_les_ralph"
-version = "1.0"
+version = "1.07"
 icon = "modicon.tex"
 icon_atlas = "modicon.xml"
 
