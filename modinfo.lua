@@ -1,11 +1,13 @@
-name = "In-game Client Mod Management"
-description = "Access your client mods from in-game. You can enable, disable, and configure your CLIENT mods without exiting the game now.\n"
+name = "In-game Mod Management"
+description = "Access your client and server mods from in-game. You can enable, disable, and configure your mods without exiting the game now.\n"
 .."The default key is set to ]\n\n"
-.."NOTE!!!: If the server is NOT DEDICATED and the HOST makes a change, then the server WILL RELOAD.\n"
+.."EXTREMELY IMPORTANT NOTE!: SERVER mods can ONLY be changed on non-caves, non-dedicated servers for now. Also, when SERVER mods are changed, all players except the host will be DISCONNECTED. (We're still trying to fix this...)\n\n"
+.."NOTE: If the server is NOT DEDICATED and the HOST changes only client mods, then the server WILL RELOAD, but the players will not be disconnected.\n"
+.."Also, you cannot change config options for SERVER mods in-game, so we suggest changing them before loading up your world.\n"
 .."Also, don't click \"cancel\" when it's loading unless you want to get caught in an inescapable infinite plane of reality...\n"
-.."Also, the mod does not work in the caves. We'll see if we can change that. "
+.."Also, the mod does not work in the caves. We'll see if we can change that."
 author = "rawii22 & lord_of_les_ralph"
-version = "1.07"
+version = "2.0"
 icon = "modicon.tex"
 icon_atlas = "modicon.xml"
 
@@ -13,7 +15,7 @@ forumthread = ""
 
 api_version = 10
 
-priority = - 1
+priority = -1
 dst_compatible = true
 all_clients_require_mod = true
 client_only_mod = false

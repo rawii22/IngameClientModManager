@@ -1,0 +1,22 @@
+create a servercreationscreen, hide it, and execute the Create() function.
+
+
+GOALS:
+--Figure out how to attach ServerCreationScreen Create() functionality to our "Apply" button.
+--Figure out how to make it work with uncommented serversaveslot.lua segment. (override serversettingstab.lua's UpdateSlot function so that it does not call serversaveslot.lua's SetSaveSlot function so that GetCharacterPortrait is not called because we do not have a serverslotscreen (GetCharacterPortrait is defined in serverslotscreen.lua))
+--Only allow hosts or admins to change server mods. (if user is a non dedicated host, this doesn't matter as long as the clients can still reconnect)
+	Make are_servermods_readonly variable depending on the user.
+--Only use the Create() function if SERVER mods were changed. (Check servercreationscreen.lua for how they detect changes in mods)
+??Eventually figure out how to keep clients for server changes. (Make another popupdialog condition that checks if the client was disconnected because of a server mod change via a netvar. We can put this in the same postconstruct)
+	Figure our why Alberto's computer won't return the right number of servers from TheNet:GetServerListings() or display hosted worlds to others.
+	Answer?: You must run TheNet:SearchServers() (or TheNet:SearchLANServers())in order for TheNet:GetServerListings() to return anything.
+	Test server-name-based reconnection many more times.
+When clients click apply and the "connecting..." popup shows up, disable the DoPeriodicTask if they click the "cancel" button.
+	In the Apply function for clients only attempt to use JoinServer if the server is accepting connections.
+!Create button in the pause menu that opens the modsscreen.
+	Take a look at Global Pause's pausescreen AddClassPostConstruct to see how they added a menu button.
+Figure out how to keep server mod configurations?
+	must be able to detect config changes before doing this. If they are not detected, Create() will not run and will cause mismatching mod configs between hosts and clients.
+Figure out caves.
+
+Changing client mods in caves works only for the host. Eventually add this in.
