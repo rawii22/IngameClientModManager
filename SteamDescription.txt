@@ -1,0 +1,26 @@
+Access your client and server mods from in-game. You can enable, disable, and configure your mods without exiting the game now.
+
+The default key for opening the mod manager is set to ]
+
+[h1] Reconnection / Config Notes [/h1]
+EXTREMELY IMPORTANT NOTE!: SERVER mods can only be changed by the HOST on non-caves, non-dedicated servers for now. Also, when SERVER mods are changed, all players except the host will be DISCONNECTED. (We're still trying to fix this...)
+Also, you cannot change config options for SERVER mods in-game, so we suggest changing them before loading up your world.
+
+NOTE: If the server is NOT DEDICATED and the HOST only changes [u]client[/u] mods, then the server WILL RELOAD, but the players will not be disconnected.
+
+[h1] Work in Progress [/h1]
+[list]
+[*]Having clients automatically reconnect to the server when [u]server[/u] mods have been changed.
+[*]Adding a "Manage Mods" button to the pause menu.
+[*]Making it possible to configure server mod settings from the mod manager.
+[*]Changing mods while in caves (at least for changing client mods).
+[/list]
+
+[h1] Details of Note [/h1] [olist]
+[*] [b]New players will temporarily not be allowed to join the server while the host has the mod manager open.[/b] This is to prevent players from experiencing horrifying glitches upon entering the world. It literally looks like the world is melting into a colorful inferno. Players will be allowed to join again if the host cancels out of the mod manager or applies the changes.
+[*] If you try changing a client mod and the game says, "The server is not accepting new connections," then PLEASE WAIT. The mod WILL RECONNECT you. This means that a host is using the mod manager and is temporarily blocking new connections, as stated in the previous point.
+[*] Server mods cannot yet be changed in cave-enabled or dedicated servers. These scenarios require more intricate communication between hosts/admins and the servers. [/olist]
+
+This mod might be useful if you're a modder and you're testing a server mod, or if you want to quickly test the compatibility of different mods. Don't forget you can [b]go to the steam workshop directly from the mod manager[/b] if you need to!
+
+HEY GUYS!!! CHECK OUT THE CLIENT VERSION! https://steamcommunity.com/sharedfiles/filedetails/?id=2205411579

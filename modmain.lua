@@ -13,7 +13,7 @@ local modDebugPrefix = "[IN-GAME MOD MANAGER]"
 local settings = {
 	is_configuring_server = false, -- must be able to detect config changes before turning this on. If they are not detected, Create() will not run and will cause mismatching mod configs between hosts and clients.
 	details_width = 505,
-	are_servermods_readonly = false,
+	are_servermods_readonly = true,
 }
 
 -- Save master shard server listing to a file accessible by secondary shards (currently not in use)
@@ -28,41 +28,41 @@ if not GLOBAL.TheNet:GetIsClient() then
 	end
 end
 
+function OpenModsScreen()
+	--if not GLOBAL.TheNet:GetIsClient() then --Probably need RPC when we expand this to client hosts.
+		--GLOBAL.TheNet:SetAllowIncomingConnections(false)
+	--end
+	if not GLOBAL.IsPaused() and IsDefaultScreen() and not GLOBAL.ThePlayer.player_classified._isSecondaryShard:value() then  -- Doesn't work in caves yet
+		local ms = ModsScreen()
+		ms.mods_page:Kill() --Kill the modstab so we can customize it later
+		for k,v in pairs(ms.mods_page.subscreener.menu.items) do
+			v:Kill() --Kills duplicated buttons that appear when the modstab is created again later
+		end
+		
+		-- Server mods are only configurable by admin of a non-dedicated, non-caves server (to be expanded)
+		--if not GLOBAL.TheNet:GetIsServerAdmin() or GLOBAL.TheNet:GetServerIsDedicated() then
+			--settings.are_servermods_readonly = true
+		--end
+		
+		ms.mods_page.tooltip:Kill()
+		ms.mods_page = ms.optionspanel:InsertWidget(ModsTab(ms, settings))
+		ms.mods_page.slotnum = GLOBAL.ShardGameIndex:GetSlot() --This satisfies a condition in ModsTab:Apply() that ensures the Sim does not reset
+		ms.bg:Kill() --Kill the default background
+		ms.bg = ms.root:AddChild(TEMPLATES.BackgroundTint(0.5, {0,0,0})) --Add custom background
+		ms.bg:MoveToBack()
+		ms.enabled_server_mods = GLOBAL.ModManager:GetEnabledServerModNames() --this is later used to detect changes to server mods
+		
+		GLOBAL.TheFrontEnd:PushScreen(ms) --Finally make the screen appear
+	end
+end
+
 ---===============
 ---  Key Handler
 ---===============
 local modkey = KEY
 --The key will activate the modsscreen screen in-game
 GLOBAL.TheInput:AddKeyUpHandler(
-	modkey:lower():byte(), 
-	function()
-		if not GLOBAL.TheNet:GetIsClient() then --Probably need RPC when we expand this to client hosts.
-			GLOBAL.TheNet:SetAllowIncomingConnections(false)
-		end
-		if not GLOBAL.IsPaused() and IsDefaultScreen() and not GLOBAL.ThePlayer.player_classified._isSecondaryShard:value() then  -- Doesn't work in caves yet
-			local ms = ModsScreen()
-			ms.mods_page:Kill() --Kill the modstab so we can customize it later
-			for k,v in pairs(ms.mods_page.subscreener.menu.items) do
-				v:Kill() --Kills duplicated buttons that appear when the modstab is created again later
-			end
-			
-			-- Server mods are only configurable by admin of a non-dedicated, non-caves server (to be expanded)
-			if not GLOBAL.TheNet:GetIsServerAdmin() or GLOBAL.TheNet:GetServerIsDedicated() then
-				settings.are_servermods_readonly = true
-			end
-			
-			ms.mods_page.tooltip:Kill()
-			ms.mods_page = ms.optionspanel:InsertWidget(ModsTab(ms, settings))
-			ms.mods_page.slotnum = GLOBAL.ShardGameIndex:GetSlot() --This satisfies a condition in ModsTab:Apply() that ensures the Sim does not reset
-			ms.bg:Kill() --Kill the default background
-			ms.bg = ms.root:AddChild(TEMPLATES.BackgroundTint(0.5, {0,0,0})) --Add custom background
-			ms.bg:MoveToBack()
-			ms.enabled_server_mods = GLOBAL.ModManager:GetEnabledServerModNames() --this is later used to detect changes to server mods
-			
-			GLOBAL.TheFrontEnd:PushScreen(ms) --Finally make the screen appear
-		end
-	end
-)
+	modkey:lower():byte(), OpenModsScreen)
 
 function IsDefaultScreen()
 	if GLOBAL.TheFrontEnd:GetActiveScreen() and GLOBAL.TheFrontEnd:GetActiveScreen().name and type(GLOBAL.TheFrontEnd:GetActiveScreen().name) == "string" and GLOBAL.TheFrontEnd:GetActiveScreen().name == "HUD" then
@@ -74,7 +74,7 @@ end
 
 local function serverModsChanged(oldMods, newMods)
 	--if the lists differ in size, then just return true
-	local oldModsSize = 0
+	--[[local oldModsSize = 0
 	local newModsSize = 0
 	for _ in pairs(oldMods) do oldModsSize = oldModsSize + 1 end
 	for _ in pairs(newMods) do newModsSize = newModsSize + 1 end
@@ -89,7 +89,7 @@ local function serverModsChanged(oldMods, newMods)
 		if oldMods[k] ~= newMods[k] then --check for differences
 			return true
 		end
-	end
+	end]]
 	
 	return false
 end
@@ -194,7 +194,47 @@ local function ApplyToGame(modsscreen)
 end
 AddClassPostConstruct("screens/redux/modsscreen", ApplyToGame)
 
-local function ReAllowIncomingConnections(modsscreen)
+--This adds in the button on the pause screen
+AddClassPostConstruct("screens/redux/pausescreen", function(self)
+    local extra_menu_height
+    if GLOBAL.TheNet:GetIsServerAdmin() then
+        extra_menu_height = 50 -- should be an even number (I think)
+    else
+        extra_menu_height = 0
+    end
+
+    --throw up the background
+    local w, h = self.bg:GetSize()
+    h = math.clamp(h + extra_menu_height or 200, 90, 500)
+    self.bg:SetSize(w, h)
+    --self:UpdateText()
+
+    local togglepausestring = "Manage Mods"
+    if togglepausestring then
+        self.togglepause = self.menu:AddItem(togglepausestring, function() self:Hide() self:unpause() OpenModsScreen() end)
+        table.removearrayvalue(self.menu.items, self.togglepause)
+        table.insert(self.menu.items, 2, self.togglepause)
+        for i, v in ipairs(self.menu.items) do
+            local pos = GLOBAL.Vector3(0,0,0)
+            if self.horizontal then
+                pos.x = pos.x + self.menu.offset * (i - 1)
+            else
+                pos.y = pos.y + self.menu.offset * (i - 1)
+            end
+            v:SetPosition(pos)
+            v:SetScale(0.7)
+        end
+        self.menu:DoFocusHookups()
+    end
+
+    local point = self.menu:GetPosition()
+    point.y = point.y + extra_menu_height / 2
+    self.menu:SetPosition(point)
+
+    --self.inst:ListenForEvent("pausestatedirty", function() self:UpdateText() end, TheWorld.net);
+end)
+
+local function ReAllowIncomingConnections(modsscreen) --modifies the back button in the modsscreen
 	local OldCancel = modsscreen.Cancel
 	modsscreen.Cancel = function(self)
 		OldCancel(self)
