@@ -20,3 +20,5 @@ Figure out how to keep server mod configurations?
 Figure out caves.
 
 Changing client mods in caves works only for the host. Eventually add this in.
+
+Change MODS_ROOT maybe to allow people to view mods from their dedicated server's own local mods folder?

@@ -6,9 +6,9 @@ description = "Access your client and server mods from in-game. You can enable, 
 .."Also, you cannot change config options for SERVER mods in-game, so we suggest changing them before loading up your world.\n"
 .."Also, don't click \"cancel\" when it's loading unless you want to get caught in an inescapable infinite plane of reality...\n"
 .."Also, the mod does not work in the caves. We'll see if we can change that.\n"
---.."Lastly, thanks a lot to hmaarrfk and zarklord for the pause menu button functionality!"
+.."Lastly, thanks a lot to hmaarrfk and zarklord for the pause menu button functionality!"
 author = "rawii22 & lord_of_les_ralph"
-version = "2.0.01"
+version = "2.0.2"
 icon = "modicon.tex"
 icon_atlas = "modicon.xml"
 

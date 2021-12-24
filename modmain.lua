@@ -13,7 +13,7 @@ local modDebugPrefix = "[IN-GAME MOD MANAGER]"
 local settings = {
 	is_configuring_server = false, -- must be able to detect config changes before turning this on. If they are not detected, Create() will not run and will cause mismatching mod configs between hosts and clients.
 	details_width = 505,
-	are_servermods_readonly = true,
+	are_servermods_readonly = false,
 }
 
 -- Save master shard server listing to a file accessible by secondary shards (currently not in use)
@@ -29,9 +29,9 @@ if not GLOBAL.TheNet:GetIsClient() then
 end
 
 function OpenModsScreen()
-	--if not GLOBAL.TheNet:GetIsClient() then --Probably need RPC when we expand this to client hosts.
-		--GLOBAL.TheNet:SetAllowIncomingConnections(false)
-	--end
+	if not GLOBAL.TheNet:GetIsClient() then --Probably need RPC when we expand this to client hosts.
+		GLOBAL.TheNet:SetAllowIncomingConnections(false)
+	end
 	if not GLOBAL.IsPaused() and IsDefaultScreen() and not GLOBAL.ThePlayer.player_classified._isSecondaryShard:value() then  -- Doesn't work in caves yet
 		local ms = ModsScreen()
 		ms.mods_page:Kill() --Kill the modstab so we can customize it later
@@ -40,9 +40,9 @@ function OpenModsScreen()
 		end
 		
 		-- Server mods are only configurable by admin of a non-dedicated, non-caves server (to be expanded)
-		--if not GLOBAL.TheNet:GetIsServerAdmin() or GLOBAL.TheNet:GetServerIsDedicated() then
-			--settings.are_servermods_readonly = true
-		--end
+		if not GLOBAL.TheNet:GetIsServerAdmin() or GLOBAL.TheNet:GetServerIsDedicated() then
+			settings.are_servermods_readonly = true
+		end
 		
 		ms.mods_page.tooltip:Kill()
 		ms.mods_page = ms.optionspanel:InsertWidget(ModsTab(ms, settings))
@@ -74,7 +74,7 @@ end
 
 local function serverModsChanged(oldMods, newMods)
 	--if the lists differ in size, then just return true
-	--[[local oldModsSize = 0
+	local oldModsSize = 0
 	local newModsSize = 0
 	for _ in pairs(oldMods) do oldModsSize = oldModsSize + 1 end
 	for _ in pairs(newMods) do newModsSize = newModsSize + 1 end
@@ -89,7 +89,7 @@ local function serverModsChanged(oldMods, newMods)
 		if oldMods[k] ~= newMods[k] then --check for differences
 			return true
 		end
-	end]]
+	end
 	
 	return false
 end
@@ -132,13 +132,22 @@ local function ApplyToGame(modsscreen)
 					-- Recreate the world
 					print(modDebugPrefix.." Apply: Requires world re-creation.")
 					GLOBAL.c_save()
+					GLOBAL.TheSystemService:EnableStorage(true)
+					GLOBAL.ShardGameIndex:SaveCurrent(function() end, true)
 					GLOBAL.TheWorld:DoTaskInTime(7, function()
-						for i, player in ipairs(GLOBAL.AllPlayers) do
-							player:OnDespawn()
-						end
-						GLOBAL.TheSystemService:EnableStorage(true)
-						GLOBAL.ShardGameIndex:SaveCurrent(function() end, true)
-						scs:Create(true,true,true)
+						GLOBAL.SetPause(true, "pause")
+						GLOBAL.SetAutopaused(true)
+						-- Use a static task, which is not affected by pausing
+						GLOBAL.TheWorld:DoStaticTaskInTime(3, function()
+							-- The literal embodiment of despair...
+							-- Manually clear all updating entities, since starting a new world was interfering with entities from the previous world that were still updating ('px' and 'v1' errors) 
+							GLOBAL.PhysicsCollisionCallbacks = {}
+							GLOBAL.Ents = {}
+							GLOBAL.UpdatingEnts = {}
+							GLOBAL.StaticUpdatingEnts = {}
+							GLOBAL.WallUpdatingEnts = {}
+							scs:Create(true,true,true)
+						end)
 					end)
 				else
 					print(modDebugPrefix.." Apply: Requires local world reset.")
@@ -200,7 +209,7 @@ AddClassPostConstruct("screens/redux/pausescreen", function(self)
     if GLOBAL.TheNet:GetIsServerAdmin() then
         extra_menu_height = 50 -- should be an even number (I think)
     else
-        extra_menu_height = 0
+        extra_menu_height = 50
     end
 
     --throw up the background
@@ -209,11 +218,11 @@ AddClassPostConstruct("screens/redux/pausescreen", function(self)
     self.bg:SetSize(w, h)
     --self:UpdateText()
 
-    local togglepausestring = "Manage Mods"
-    if togglepausestring then
-        self.togglepause = self.menu:AddItem(togglepausestring, function() self:Hide() self:unpause() OpenModsScreen() end)
-        table.removearrayvalue(self.menu.items, self.togglepause)
-        table.insert(self.menu.items, 2, self.togglepause)
+    local managemodsstring = "Manage Mods"
+    if managemodsstring then
+        self.managemods = self.menu:AddItem(managemodsstring, function() self:Hide() self:unpause() OpenModsScreen() end)
+        table.removearrayvalue(self.menu.items, self.managemods)
+        table.insert(self.menu.items, 3, self.managemods)
         for i, v in ipairs(self.menu.items) do
             local pos = GLOBAL.Vector3(0,0,0)
             if self.horizontal then
