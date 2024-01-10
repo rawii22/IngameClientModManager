@@ -334,13 +334,13 @@ function OverrideDisconnectDialog(popupdialog)
 	if popupdialog.dialog and popupdialog.dialog.title:GetString() == GLOBAL.STRINGS.UI.NETWORKDISCONNECT.TITLE.ID_ALREADY_CONNECTED and GLOBAL.ThePlayer and GLOBAL.ThePlayer.isApplyingModChanges then
 		popupdialog.dialog.title:SetString("Reconnecting to server...")
 		popupdialog.dialog.body:SetString("Don't panic. We've got everything under control.")
-		popupdialog.dialog.actions:Kill()
+		popupdialog.dialog.actions:EditItem(1, "Disconnect", nil, function() GLOBAL.SimReset() end)
 	end
 	if popupdialog.dialog and popupdialog.dialog.title:GetString() == GLOBAL.STRINGS.UI.NETWORKDISCONNECT.TITLE.DEFAULT and GLOBAL.ThePlayer and GLOBAL.ThePlayer.player_classified._serverModsChanging:value() then
 		popupdialog.dialog.title:SetString("Reconnecting to server...")
 		popupdialog.dialog.body:SetString("Don't panic. We've got everything under control.\nAn admin has changed server mods.")
-		popupdialog.dialog.actions:Kill()
-
+		popupdialog.dialog.actions:EditItem(1, "Disconnect", nil, function() GLOBAL.SimReset() end)
+		
 		-- Periodically attempt to rejoin server
 		GLOBAL.TheSim:SetSetting("misc", "warn_mods_enabled", "false")
 		GLOBAL.ThePlayer:DoStaticPeriodicTask(10, function()
@@ -349,6 +349,24 @@ function OverrideDisconnectDialog(popupdialog)
 	end
 end
 AddClassPostConstruct("screens/redux/popupdialog", OverrideDisconnectDialog)
+
+function OverrideLaunchingServerPopup(launchingserverpopup)
+	if GLOBAL.ThePlayer and GLOBAL.ThePlayer.player_classified._serverModsChanging:value() then
+		launchingserverpopup.OnCancel = function()
+			GLOBAL.SimReset()
+		end
+	end
+end
+AddClassPostConstruct("screens/redux/launchingserverpopup", OverrideLaunchingServerPopup)
+
+function OverrideConnectingToGamePopup(connectingtogamepopup)
+	if GLOBAL.ThePlayer and GLOBAL.ThePlayer.player_classified._serverModsChanging:value() then
+		connectingtogamepopup.OnCancel = function()
+			GLOBAL.SimReset()
+		end
+	end
+end
+AddClassPostConstruct("screens/redux/connectingtogamepopup", OverrideConnectingToGamePopup)
 
 -- Attempt to rejoin server by using the ip address or name of the current server. Wait until the server is back online.
 function AttemptToRejoinServer()
